@@ -1,0 +1,3 @@
+[submodule "KitchenAIder"]
+	path = KitchenAIder
+	url = git@github.com:aforwardz/KitchenAIder.git
