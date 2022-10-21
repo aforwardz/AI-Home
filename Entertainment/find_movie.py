@@ -52,11 +52,14 @@ def parse_movie(content, limit=50):
                     continue
 
                 rating = query_movie(movie_name, year)
-                insert_movie(movie_name, year, rating)
+                movie_html = ''
 
                 if rating >= RATING_BASELINE:
                     rating_div = """<div><b><span style="color:#722ED1;">豆瓣评分：%s</span>""" % rating
-                    movies.append(rating_div + ''.join([str(i) for i in current]))
+                    movie_html = rating_div + ''.join([str(i) for i in current])
+                    movies.append(movie_html)
+
+                insert_movie(movie_name, year, rating, movie_html)
 
                 current = []
                 count += 1
@@ -71,11 +74,14 @@ def parse_movie(content, limit=50):
         movie_name, year = parse_movie_item(current[0])
         if movie_name is not None and check_new(movie_name, year):
             rating = query_movie(movie_name, year)
-            insert_movie(movie_name, year, rating)
+            movie_html = ''
 
             if rating >= RATING_BASELINE:
                 rating_div = """<div><b><span style="color:#722ED1;">豆瓣评分：%s</span>""" % rating
-                movies.append(rating_div + ''.join([str(i) for i in current]))
+                movie_html = rating_div + ''.join([str(i) for i in current])
+                movies.append(movie_html)
+
+            insert_movie(movie_name, year, rating, movie_html)
 
     return movies
 
@@ -118,8 +124,9 @@ def query_movie(name, year=0):
     return rating
 
 
-def insert_movie(name, year, rating):
-    cursor.execute("INSERT INTO movies VALUES ('{name}', {year}, {rating})".format(name=name, year=year, rating=rating))
+def insert_movie(name, year, rating, html):
+    cursor.execute("INSERT INTO movies VALUES ('{name}', {year}, {rating}, {html})".format(
+        name=name, year=year, rating=rating, html=html))
     conn.commit()
 
 
@@ -135,7 +142,7 @@ def send_email(movies_content, mail_to, sub_type='plain'):
     lam_format_addr = lambda name, addr: formataddr((Header(name, 'utf-8').encode(), addr))
     # 传入昵称和邮件地址
     msg['From'] = EMAIL_HOST_USER
-    msg['To'] = mail_to
+    msg['To'] = Header(','.join(mail_to))
 
     # 邮件标题
     msg['Subject'] = Header('今日高分电影', 'utf-8').encode()  # 腾讯邮箱略过会导致邮件被屏蔽
@@ -152,7 +159,7 @@ def send_email(movies_content, mail_to, sub_type='plain'):
 
 
 if __name__ == '__main__':
-    cursor.execute("CREATE TABLE IF NOT EXISTS movies(name TEXT, year INT, rating REAL)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS movies(name TEXT, year INT, rating REAL, html TEXT)")
     try:
         today_movies = find_good_movie()
         if today_movies:
