@@ -7,7 +7,7 @@ from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr
 import smtplib
-from private_settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, MOVIE_MAIL_LIST
+from private_settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, MOVIE_MAIL_LIST, ADMIN_MAIL
 
 
 MOVIE_RESOURCE_URL = "https://www.evernote.com/shard/s744/sh/63ebf76a-4f70-cdd2-f726-3ebe20b95aeb/529c07bafe11d66dcdfdb397adb97678?json=1&rdata=0"
@@ -123,7 +123,7 @@ def insert_movie(name, year, rating):
     conn.commit()
 
 
-def send_email(movies_content, sub_type='plain'):
+def send_email(movies_content, mail_to, sub_type='plain'):
     # 用户信息
     smtp_server = 'smtp.exmail.qq.com'  # 腾讯服务器地址
 
@@ -135,7 +135,7 @@ def send_email(movies_content, sub_type='plain'):
     lam_format_addr = lambda name, addr: formataddr((Header(name, 'utf-8').encode(), addr))
     # 传入昵称和邮件地址
     msg['From'] = EMAIL_HOST_USER
-    msg['To'] = MOVIE_MAIL_LIST
+    msg['To'] = mail_to
 
     # 邮件标题
     msg['Subject'] = Header('今日高分电影', 'utf-8').encode()  # 腾讯邮箱略过会导致邮件被屏蔽
@@ -147,7 +147,7 @@ def send_email(movies_content, sub_type='plain'):
     server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
 
     # 发送邮件及退出
-    server.sendmail(EMAIL_HOST_USER, MOVIE_MAIL_LIST, msg.as_string())  # 发送地址需与登陆的邮箱一致
+    server.sendmail(EMAIL_HOST_USER, mail_to, msg.as_string())  # 发送地址需与登陆的邮箱一致
     server.quit()
 
 
@@ -156,8 +156,8 @@ if __name__ == '__main__':
     try:
         today_movies = find_good_movie()
         if today_movies:
-            send_email(''.join(today_movies), sub_type='html')
+            send_email(''.join(today_movies), MOVIE_MAIL_LIST, sub_type='html')
     except Exception as e:
         print(e)
-        send_email(str(e))
+        send_email(str(e), ADMIN_MAIL)
 
