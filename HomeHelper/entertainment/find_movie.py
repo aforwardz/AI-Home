@@ -19,7 +19,7 @@ MOVIE_RATING_URL = "https://api.wmdb.tv/api/v1/movie/search?q=%s"
 RATING_BASELINE = 7.5
 
 
-conn = sqlite3.connect('./movie.db')
+conn = sqlite3.connect('movie.db')
 print('movie数据库打开成功')
 cursor = conn.cursor()
 
@@ -37,6 +37,7 @@ def find_good_movie():
 
 
 def parse_movie(content, limit=50):
+    today = str(datetime.today().date())
     bs = BeautifulSoup(content, 'html.parser')
     items = bs.find('en-note').find_all('div')
     # print(items)
@@ -61,7 +62,7 @@ def parse_movie(content, limit=50):
                     movie_html = rating_div + ''.join([str(i) for i in current])
                     movies.append(movie_html)
 
-                insert_movie(movie_name, year, rating, movie_html)
+                insert_movie(movie_name, year, rating, today, movie_html)
 
                 current = []
                 count += 1
@@ -83,7 +84,7 @@ def parse_movie(content, limit=50):
                 movie_html = rating_div + ''.join([str(i) for i in current])
                 movies.append(movie_html)
 
-            insert_movie(movie_name, year, rating, movie_html)
+            insert_movie(movie_name, year, rating, today, movie_html)
 
     return movies
 
@@ -126,9 +127,9 @@ def query_movie(name, year=0):
     return rating
 
 
-def insert_movie(name, year, rating, html):
-    cursor.execute("INSERT INTO movies VALUES ('{name}', {year}, {rating}, '{html}')".format(
-        name=name, year=year, rating=rating, html=html))
+def insert_movie(name, year, rating, add_date, html):
+    cursor.execute("INSERT INTO movies VALUES ('{name}', {year}, {rating}, '{add_date}', '{html}')".format(
+        name=name, year=year, rating=rating, add_date=add_date, html=html))
     conn.commit()
 
 
