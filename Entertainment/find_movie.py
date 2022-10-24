@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import re
 import time
 import sqlite3
+import traceback
+from datetime import datetime
 from email.header import Header
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -125,7 +127,7 @@ def query_movie(name, year=0):
 
 
 def insert_movie(name, year, rating, html):
-    cursor.execute("INSERT INTO movies VALUES ('{name}', {year}, {rating}, {html})".format(
+    cursor.execute("INSERT INTO movies VALUES ('{name}', {year}, {rating}, '{html}')".format(
         name=name, year=year, rating=rating, html=html))
     conn.commit()
 
@@ -145,7 +147,7 @@ def send_email(movies_content, mail_to, sub_type='plain'):
     msg['To'] = Header(','.join(mail_to))
 
     # 邮件标题
-    msg['Subject'] = Header('今日高分电影', 'utf-8').encode()  # 腾讯邮箱略过会导致邮件被屏蔽
+    msg['Subject'] = Header('【%s】今日高分电影' % str(datetime.today().date()), 'utf-8').encode()  # 腾讯邮箱略过会导致邮件被屏蔽
 
     # 腾讯邮箱支持SSL(不强制)， 不支持TLS。
     server = smtplib.SMTP_SSL(smtp_server, 465)  # 按需开启
@@ -165,6 +167,6 @@ if __name__ == '__main__':
         if today_movies:
             send_email(''.join(today_movies), MOVIE_MAIL_LIST, sub_type='html')
     except Exception as e:
-        print(e)
-        send_email(str(e), ADMIN_MAIL)
+        print(str(traceback.format_exc()))
+        send_email(str(traceback.format_exc()), ADMIN_MAIL)
 
