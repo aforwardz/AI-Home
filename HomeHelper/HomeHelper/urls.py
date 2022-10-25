@@ -14,8 +14,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path, include
+from tyadmin_api.views import AdminIndexView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    re_path('^xadmin/.*', AdminIndexView.as_view()),
+    path('api/xadmin/v1/', include('tyadmin_api.urls')),
 ]
