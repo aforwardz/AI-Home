@@ -1,7 +1,10 @@
 .idea/
 .DS_Store
 __pycache__/
+static/
+templates/
 
 *.db
+*.sqlite3
 
 private_settings.py
